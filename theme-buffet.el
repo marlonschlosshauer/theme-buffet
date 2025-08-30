@@ -156,6 +156,21 @@ For those who just don't have the time and want the best.")
 (define-obsolete-variable-alias 'theme-buffet--end-user
                                 'theme-buffet-end-user "0.2.0dev")
 
+(defun theme-buffet--set-end-user (symbol value)
+  "Set function for `theme-buffet-end-user'.
+If VALUE is a plain list of themes, convert it to a plist with all periods.
+If VALUE is already a plist, use it as-is."
+  (let ((processed-value
+         (if (and (listp value) (not (keywordp (car value))))
+             (list :night value
+                   :twilight value
+                   :morning value
+                   :day value
+                   :afternoon value
+                   :evening value)
+           value)))
+    (set-default symbol processed-value)))
+
 (defcustom theme-buffet-end-user
   '(:night     (wheatgrass manoj-dark modus-vivendi)
     :morning   (adwaita whiteboard leuven modus-operandi tango dichromacy tsdh-light)
@@ -164,17 +179,32 @@ For those who just don't have the time and want the best.")
   "Associate day periods with list of themes.
 Each association is of the form `:KEYWORD (THEMES)' where :KEYWORD is one among
 :dark, :twilight, :dawn, etc, and (THEMES), a list of existent themes.
+
+You can specify themes in two ways:
+1. As a plist mapping periods to theme lists:
+   \\='(:night (theme1 theme2) :morning (theme3 theme4))
+2. As a plain list of themes:
+   \\='(theme1 theme2 theme3 theme4)
+
 Prefilled with Emacs default themes as an example to be changed by the user."
-  :type `(plist
-          :options
-          (((const :tag "Darkness of the night" :night)
-            (repeat (choice symbol ,@theme-buffet--const-themes)))
-           ((const :tag "Bright sun is up" :morning)
-            (repeat (choice symbol ,@theme-buffet--const-themes)))
-           ((const :tag "Perhaps a clouded afternoon" :afternoon)
-            (repeat (choice symbol ,@theme-buffet--const-themes)))
-           ((const :tag "Close to the sunset" :evening)
-            (repeat (choice symbol ,@theme-buffet--const-themes))))))
+  :type `(choice
+          (plist
+           :tag "Period-specific themes"
+           :options
+           (((const :tag "Darkness of the night" :night)
+             (repeat (choice symbol ,@theme-buffet--const-themes)))
+            ((const :tag "Twilight period" :twilight)
+             (repeat (choice symbol ,@theme-buffet--const-themes)))
+            ((const :tag "Bright sun is up" :morning)
+             (repeat (choice symbol ,@theme-buffet--const-themes)))
+            ((const :tag "Midday period" :day)
+             (repeat (choice symbol ,@theme-buffet--const-themes)))
+            ((const :tag "Perhaps a clouded afternoon" :afternoon)
+             (repeat (choice symbol ,@theme-buffet--const-themes)))
+            ((const :tag "Close to the sunset" :evening)
+             (repeat (choice symbol ,@theme-buffet--const-themes)))))
+          (repeat :tag "Themes for all periods" (choice symbol ,@theme-buffet--const-themes)))
+  :set #'theme-buffet--set-end-user)
 
 (defcustom theme-buffet-menu 'built-in
   "Define which property list to use when selecting the theme list."
